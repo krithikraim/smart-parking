@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ title }}</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        h1 { color: #4a4a4a; border-bottom: 2px solid #4a4a4a; padding-bottom: 10px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .header { display: flex; justify-content: space-between; margin-bottom: 20px; }
+        .footer { margin-top: 30px; font-size: 0.9em; text-align: right; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>{{ title }}</h1>
+        <div>Generated on: {{ now.strftime('%Y-%m-%d %H:%M') }}</div>
+    </div>
+
+    {% if report_type == 'bookings' or report_type == 'all' %}
+        {% if report_type == 'all' %}<h2>Bookings</h2>{% endif %}
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>User</th>
+                    <th>Slot</th>
+                    <th>Start Time</th>
+                    <th>End Time</th>
+                    <th>Duration</th>
+                    <th>Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for booking in data.bookings %}
+                <tr>
+                    <td>{{ booking.id }}</td>
+                    <td>{{ booking.user.username }}</td>
+                    <td>{{ booking.slot.name }}</td>
+                    <td>{{ booking.start_time.strftime('%Y-%m-%d %H:%M') }}</td>
+                    <td>{{ booking.end_time.strftime('%Y-%m-%d %H:%M') if booking.end_time else '-' }}</td>
+                    <td>
+                        {% if booking.end_time %}
+                            {{ ((booking.end_time - booking.start_time).seconds / 3600)|round(2) }}h
+                        {% else %}
+                            {{ booking.booked_hours }}h
+                        {% endif %}
+                    </td>
+                    <td>₹{{ "%.2f"|format(booking.total_cost) }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+
+    {% if report_type == 'revenue' or report_type == 'all' %}
+        {% if report_type == 'all' %}<h2>Revenue</h2>{% endif %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Revenue</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for day in data.revenue %}
+                <tr>
+                    <td>{{ day.date }}</td>
+                    <td>₹{{ "%.2f"|format(day.revenue) }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+
+    {% if report_type == 'slots' or report_type == 'all' %}
+        {% if report_type == 'all' %}<h2>Parking Slots</h2>{% endif %}
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Status</th>
+                    <th>Hourly Rate</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for slot in data.slots %}
+                <tr>
+                    <td>{{ slot.id }}</td>
+                    <td>{{ slot.name }}</td>
+                    <td>{{ slot.status }}</td>
+                    <td>₹{{ "%.2f"|format(slot.hourly_rate) }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+
+    <div class="footer">
+        Parking Management System Report
+    </div>
+
+    <script>
+        // Auto-print when opened in new window
+        if (window.location.search.includes('print=true')) {
+            window.print();
+            setTimeout(() => { window.close(); }, 1000);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+ <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard - Smart Parking</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+</head>
+<body class="min-h-screen bg-gradient-to-br from-gray-100 to-blue-50">
+   <!-- Navigation -->
+    <nav class="bg-white/80 backdrop-blur-md shadow-sm">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between h-16 items-center">
+          <div class="flex items-center">
+            <span
+              class="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent"
+            >
+              SmartPark
+            </span>
+          </div>
+          <div class="flex items-center space-x-4">
+            <span class="text-gray-600">Hi, {{ current_user.username }}</span>
+            <a
+              href="{{ url_for('logout') }}"
+              class="px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-all"
+            >
+              Logout
+            </a>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="bg-white/80 backdrop-blur-sm rounded-xl p-8 shadow-lg max-w-2xl mx-auto">
+            <div class="text-center mb-8">
+                <h1 class="text-3xl font-bold text-gray-800 mb-2">Payment Summary</h1>
+                <p class="text-gray-600">Transaction ID: PARK-{{ booking.id }}</p>
+            </div>
+
+            <div class="space-y-6 mb-8">
+                <div class="grid grid-cols-2 gap-4 text-gray-600">
+                    <div>
+                        <span class="block">Parking Slot:</span>
+                        <span class="font-semibold">{{ booking.slot.name }}</span>
+                    </div>
+                    <div>
+                        <span class="block">Duration:</span>
+                        <span class="font-semibold">
+                            {{ ((booking.end_time - booking.start_time).seconds / 3600)|round(2) }} hours
+                        </span>
+                    </div>
+                </div>
+
+                <div class="bg-blue-50/50 p-6 rounded-xl">
+                    <div class="text-3xl font-bold text-center text-blue-600">
+                        Total: ₹{{ "%.2f"|format(booking.total_cost) }}
+                    </div>
+                </div>
+
+                <div class="space-y-4">
+                    <button class="w-full bg-green-500 text-white py-3 rounded-lg hover:bg-green-600 transition-all">
+                        Proceed with UPI Payment
+                    </button>
+                    <button class="w-full border-2 border-blue-500 text-blue-500 py-3 rounded-lg hover:bg-blue-50 transition-all">
+                        Pay with Credit Card
+                    </button>
+                    <button class="w-full bg-gray-100 text-gray-600 py-3 rounded-lg hover:bg-gray-200 transition-all">
+                        Cash Payment
+                    </button>
+                </div>
+            </div>
+
+            <div class="text-center text-gray-500 text-sm">
+                <p>This is a mock payment interface for demonstration purposes only</p>
+            </div>
+        </div>
+    </main>
+</body>
+</html>

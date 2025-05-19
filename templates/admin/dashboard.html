@@ -1,0 +1,308 @@
+<!-- templates/admin/dashboard.html -->
+{% extends "admin/base.html" %} {% block title %}Dashboard Overview{% endblock
+%}
+
+<nav>
+  {% if current_user.role == 'admin' %}
+  <a
+    href="{{ url_for('admin_dashboard') }}"
+    class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
+  >
+    Admin Panel
+  </a>
+  {% endif %}
+</nav>
+
+{% block content %}
+<!-- Week filter -->
+<div class="flex justify-end space-x-2 mb-4">
+  <a
+    href="{{ url_for('admin_dashboard', week=0) }}"
+    class="px-3 py-1 rounded {{ 'bg-purple-600 text-white' if week_offset==0 else 'bg-gray-100 text-gray-700' }}"
+  >
+    This Week
+  </a>
+  <a
+    href="{{ url_for('admin_dashboard', week=1) }}"
+    class="px-3 py-1 rounded {{ 'bg-purple-600 text-white' if week_offset==1 else 'bg-gray-100 text-gray-700' }}"
+  >
+    Last Week
+  </a>
+  <a
+    href="{{ url_for('admin_dashboard', week=2) }}"
+    class="px-3 py-1 rounded {{ 'bg-purple-600 text-white' if week_offset==2 else 'bg-gray-100 text-gray-700' }}"
+  >
+    2 Weeks Ago
+  </a>
+</div>
+
+<!-- Report Download Section -->
+<div class="mb-6">
+  <button
+    onclick="openReportModal()"
+    class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+  >
+    <i class="fas fa-download mr-2"></i>Download Report
+  </button>
+</div>
+
+<!-- Report Modal -->
+<div
+  id="reportModal"
+  class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden"
+>
+  <div class="bg-white p-6 rounded-lg w-full max-w-md">
+    <h3 class="text-xl font-semibold mb-4">Generate Report</h3>
+
+    <div class="space-y-4">
+      <div>
+        <label class="block mb-2">Report Type</label>
+        <select id="reportType" class="w-full p-2 border rounded">
+          <option value="all">Complete Report (All Data)</option>
+          <option value="bookings">Bookings Report</option>
+          <option value="revenue">Revenue Report</option>
+          <option value="slots">Parking Slots Report</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="block mb-2">Format</label>
+        <select id="reportFormat" class="w-full p-2 border rounded">
+          <option value="print">Print</option>
+          <option value="download">Download as HTML</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="flex justify-end space-x-3 mt-6">
+      <button
+        onclick="closeReportModal()"
+        class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
+      >
+        Cancel
+      </button>
+      <button
+        onclick="generateReport()"
+        class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+      >
+        Generate
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Summary Cards -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+  <div class="bg-white p-6 rounded-xl shadow-sm">
+    <div class="flex items-center justify-between">
+      <div>
+        <p class="text-gray-500">Total Slots</p>
+        <p class="text-3xl font-bold">{{ stats.total_slots }}</p>
+      </div>
+      <i class="fas fa-parking text-3xl text-blue-500"></i>
+    </div>
+  </div>
+  <div class="bg-white p-6 rounded-xl shadow-sm">
+    <div class="flex items-center justify-between">
+      <div class="relative">
+        <p class="text-gray-500">Available Slots</p>
+        <p class="text-3xl font-bold">{{ stats.available_slots }}</p>
+        <div class="relative text-left">
+            <i class="fas fa-eye text-2xl absolute right-[30%] bottom-[-10%] text-purple-600 cursor-pointer hover:text-purple-700" onclick="openSlotsModal()"></i>
+        </div>
+      </div>
+      <i class="fas fa-car text-3xl text-green-500"></i>
+    </div>
+  </div>
+  <div class="bg-white p-6 rounded-xl shadow-sm">
+    <div class="flex items-center justify-between">
+      <div>
+        <p class="text-gray-500">Active Bookings</p>
+        <p class="text-3xl font-bold">{{ stats.active_bookings }}</p>
+      </div>
+      <i class="fas fa-clock text-3xl text-yellow-500"></i>
+    </div>
+  </div>
+  <div class="bg-white p-6 rounded-xl shadow-sm">
+    <div class="flex items-center justify-between">
+      <div>
+        <p class="text-gray-500">Users</p>
+        <p class="text-3xl font-bold">{{ stats.total_users }}</p>
+      </div>
+      <i class="fas fa-users text-3xl text-purple-500"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<!-- Available Slots Modal -->
+<div
+  id="slotsModal"
+  class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50"
+>
+  <div class="bg-white p-6 rounded-xl shadow-lg w-full max-w-lg">
+    <div class="flex justify-between items-center mb-6">
+      <h3 class="text-xl font-semibold">Available Parking Slots</h3>
+      <button
+        onclick="closeSlotsModal()"
+        class="text-gray-500 hover:text-gray-700"
+      >
+        <i class="fas fa-times text-xl"></i>
+      </button>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+      <!-- Car Slots -->
+      <div class="bg-blue-50 p-4 rounded-xl shadow-sm">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-gray-500">Car Slots</p>
+            <p class="text-3xl font-bold">{{ stats.available_car_slots }}</p>
+          </div>
+          <i class="fas fa-car text-3xl text-blue-500"></i>
+        </div>
+      </div>
+
+      <!-- Bike Slots -->
+      <div class="bg-green-50 p-4 rounded-xl shadow-sm">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-gray-500">Bike Slots</p>
+            <p class="text-3xl font-bold">{{ stats.available_bike_slots }}</p>
+          </div>
+          <i class="fas fa-motorcycle text-3xl text-green-500"></i>
+        </div>
+      </div>
+
+      <!-- Truck Slots -->
+      <div class="bg-yellow-50 p-4 rounded-xl shadow-sm">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-gray-500">Truck Slots</p>
+            <p class="text-3xl font-bold">{{ stats.available_truck_slots }}</p>
+            
+          </div>
+          <i class="fas fa-truck text-3xl text-yellow-500"></i>
+        </div>
+      </div>
+    </div>
+
+    <div class="text-center">
+      <button
+        onclick="closeSlotsModal()"
+        class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
+      >
+        Close
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Revenue Chart -->
+<div class="bg-white p-6 rounded-xl shadow-sm mb-8">
+  <h3 class="text-xl font-semibold mb-4">
+    Revenue Overview ({{ labels[0] }} – {{ labels[-1] }})
+  </h3>
+  <canvas id="revenueChart"></canvas>
+</div>
+
+<!-- Recent Activities Table -->
+<div class="bg-white rounded-xl shadow-sm overflow-hidden mb-4">
+  <table class="min-w-full">
+    <thead class="bg-gray-50">
+      <tr>
+        <th class="px-6 py-3 text-left">User</th>
+        <th class="px-6 py-3 text-left">Slot</th>
+        <th class="px-6 py-3 text-left">Duration</th>
+        <th class="px-6 py-3 text-left">Amount</th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-gray-200">
+      {% for booking in recent_bookings %}
+      <tr class="hover:bg-gray-50">
+        <td class="px-6 py-4">{{ booking.user.username }}</td>
+        <td class="px-6 py-4">{{ booking.slot.name }}</td>
+        <td class="px-6 py-4">
+          {% if booking.end_time %} {{ ((booking.end_time -
+          booking.start_time).seconds / 3600)|round(2) }}h {% else %} {{
+          booking.booked_hours }}h {% endif %}
+        </td>
+        <td class="px-6 py-4 font-medium">
+          ₹{{ "%.2f"|format(booking.total_cost) }}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- Pagination -->
+<div class="flex justify-center space-x-2 mb-8">
+  {% if pagination.has_prev %}
+  <a
+    href="{{ url_for('admin_dashboard', page=pagination.prev_num, week=week_offset) }}"
+    class="px-4 py-2 bg-gray-100 rounded"
+    >Previous</a
+  >
+  {% endif %}
+  <span class="px-4 py-2">{{ pagination.page }} / {{ pagination.pages }}</span>
+  {% if pagination.has_next %}
+  <a
+    href="{{ url_for('admin_dashboard', page=pagination.next_num, week=week_offset) }}"
+    class="px-4 py-2 bg-gray-100 rounded"
+    >Next</a
+  >
+  {% endif %}
+</div>
+
+<script>
+  const ctx = document.getElementById('revenueChart').getContext('2d');
+  new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: {{ labels|tojson }},
+      datasets: [{
+        label: 'Daily Revenue',
+        data: {{ data|tojson }},
+        borderColor: '#3B82F6',
+        tension: 0.4
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { position: 'top' } }
+    }
+  });
+
+  function openReportModal() {
+      document.getElementById('reportModal').classList.remove('hidden');
+  }
+
+  function closeReportModal() {
+      document.getElementById('reportModal').classList.add('hidden');
+  }
+
+  function generateReport() {
+      const type = document.getElementById('reportType').value;
+      const format = document.getElementById('reportFormat').value;
+
+      if (format === 'print') {
+          window.open(`/admin/generate-report?type=${type}&print=true`, '_blank');
+      } else {
+          window.location.href = `/admin/generate-report?type=${type}`;
+      }
+
+      closeReportModal();
+  }
+
+  function openSlotsModal() {
+    document.getElementById('slotsModal').classList.remove('hidden');
+  }
+  
+  function closeSlotsModal() {
+    document.getElementById('slotsModal').classList.add('hidden');
+  }
+</script>
+{% endblock %}

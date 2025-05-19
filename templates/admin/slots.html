@@ -1,0 +1,132 @@
+{% extends "admin/base.html" %}
+{% block title %}Manage Parking Slots{% endblock %}
+
+{% block content %}
+<div class="bg-white rounded-xl shadow-sm overflow-hidden p-6 space-y-6">
+  <h2 class="text-xl font-semibold">Parking Slots</h2>
+
+  <!-- Filter by Vehicle Type -->
+  <div class="flex items-center space-x-4">
+    <label class="text-gray-700">Filter by Type:</label>
+    <select id="vehicleTypeFilter" class="p-2 border rounded-lg">
+      <option value="all">All Types</option>
+      <option value="car">Car</option>
+      <option value="bike">Bike</option>
+      <option value="truck">Truck</option>
+    </select>
+  </div>
+
+  <!-- ADD NEW SLOT -->
+  <form action="{{ url_for('add_slot') }}" method="POST" class="flex items-end space-x-4">
+    <div>
+      <label class="block text-gray-700">Name</label>
+      <input name="name" class="mt-1 p-2 border rounded-lg" placeholder="Slot A1" required>
+    </div>
+    <div>
+      <label class="block text-gray-700">Rate (₹/hr)</label>
+      <input name="hourly_rate" type="number" step="0.01" class="mt-1 p-2 border rounded-lg" placeholder="100" required>
+    </div>
+    <div>
+      <label class="block text-gray-700">Vehicle Type</label>
+      <select name="vehicle_type" class="mt-1 p-2 border rounded-lg" required>
+        <option value="car">Car</option>
+        <option value="bike">Bike</option>
+        <option value="truck">Truck</option>
+      </select>
+    </div>
+    <button type="submit"
+            class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600">
+      Add Slot
+    </button>
+  </form>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div class="space-y-2">
+        {% for cat, msg in messages %}
+          <div class="p-2 rounded-lg text-sm 
+                     {% if cat=='success' %}bg-green-100 text-green-800
+                     {% else %}bg-red-100 text-red-800{% endif %}">
+            {{ msg }}
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  <!-- EXISTING TABLE -->
+  <table class="min-w-full divide-y divide-gray-200">
+    <thead class="bg-gray-50">
+      <tr>
+        <th class="px-6 py-3 text-left">Name</th>
+        <th class="px-6 py-3 text-left">Type</th>
+        <th class="px-6 py-3 text-left">Status</th>
+        <th class="px-6 py-3 text-left">Rate (₹/hr)</th>
+        <th class="px-6 py-3 text-left">Actions</th>
+      </tr>
+    </thead>
+    <tbody class="bg-white divide-y divide-gray-200">
+      {% for slot in slots %}
+      <tr class="hover:bg-gray-50 slot-row" data-type="{{ slot.vehicle_type }}">
+        <td class="px-6 py-4">{{ slot.name }}</td>
+        <td class="px-6 py-4">
+          {% if slot.vehicle_type == 'car' %}
+            <i class="fas fa-car text-blue-500"></i> Car
+          {% elif slot.vehicle_type == 'bike' %}
+            <i class="fas fa-motorcycle text-green-500"></i> Bike
+          {% else %}
+            <i class="fas fa-truck text-orange-500"></i> Truck
+          {% endif %}
+        </td>
+        <td class="px-6 py-4">{{ slot.status.title() }}</td>
+        <td class="px-6 py-4">{{ "%.2f"|format(slot.hourly_rate) }}</td>
+        <td class="px-6 py-4 space-x-2">
+          <!-- Edit Form (simplified for this example) -->
+          <form action="{{ url_for('update_slot', slot_id=slot.id) }}" method="POST" class="inline">
+            <select name="status" class="p-1 border rounded">
+              <option value="available" {% if slot.status=='available' %}selected{% endif %}>Available</option>
+              <option value="booked" {% if slot.status=='booked' %}selected{% endif %}>Booked</option>
+            </select>
+            <input name="hourly_rate" type="number" step="0.01" value="{{ slot.hourly_rate }}" 
+                   class="w-20 p-1 border rounded">
+            <select name="vehicle_type" class="p-1 border rounded">
+              <option value="car" {% if slot.vehicle_type=='car' %}selected{% endif %}>Car</option>
+              <option value="bike" {% if slot.vehicle_type=='bike' %}selected{% endif %}>Bike</option>
+              <option value="truck" {% if slot.vehicle_type=='truck' %}selected{% endif %}>Truck</option>
+            </select>
+            <button type="submit" class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600">
+              Update
+            </button>
+          </form>
+          
+          <!-- DELETE BUTTON -->
+          <form action="{{ url_for('delete_slot', slot_id=slot.id) }}" method="POST" class="inline">
+            <button type="submit"
+                    onclick="return confirm('Delete slot {{ slot.name }}?')"
+                    class="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600">
+              Delete
+            </button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<script>
+  // Filter slots by vehicle type
+  document.getElementById('vehicleTypeFilter').addEventListener('change', function() {
+    const type = this.value;
+    const rows = document.querySelectorAll('.slot-row');
+    
+    rows.forEach(row => {
+      if (type === 'all' || row.dataset.type === type) {
+        row.style.display = '';
+      } else {
+        row.style.display = 'none';
+      }
+    });
+  });
+</script>
+{% endblock %}

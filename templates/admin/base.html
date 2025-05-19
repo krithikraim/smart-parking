@@ -1,0 +1,56 @@
+<!-- templates/admin/base.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Smart Parking</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gray-50">
+    <div class="min-h-screen flex">
+        <!-- Sidebar -->
+        <aside class="bg-gray-800 text-white w-64 min-h-screen flex-shrink-0">
+            <div class="p-4">
+                <h2 class="text-2xl font-bold mb-6">Admin Panel</h2>
+                <nav class="space-y-2">
+                    <a href="{{ url_for('admin_dashboard') }}" 
+                       class="flex items-center p-2 rounded hover:bg-gray-700">
+                        <i class="fas fa-chart-line mr-3"></i> Dashboard
+                    </a>
+                    <a href="{{ url_for('manage_slots') }}" 
+                       class="flex items-center p-2 rounded hover:bg-gray-700">
+                        <i class="fas fa-parking mr-3"></i> Parking Slots
+                    </a>
+                    <a href="{{ url_for('manage_users') }}" 
+                       class="flex items-center p-2 rounded hover:bg-gray-700">
+                        <i class="fas fa-users mr-3"></i> Users
+                    </a>
+                    <a href="{{ url_for('reports') }}" 
+                       class="flex items-center p-2 rounded hover:bg-gray-700">
+                        <i class="fas fa-chart-bar mr-3"></i> Reports
+                    </a>
+                </nav>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 p-8">
+            <div class="flex justify-between items-center mb-6">
+                <h1 class="text-2xl font-bold text-gray-800">{% block title %}{% endblock %}</h1>
+                <div class="flex items-center">
+                    <span class="mr-4 text-gray-600">Admin: {{ current_user.username }}</span>
+                    <a href="{{ url_for('logout') }}" 
+                       class="text-red-500 hover:text-red-600">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </a>
+                </div>
+            </div>
+            
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+</body>
+</html>
